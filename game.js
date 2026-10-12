@@ -124,6 +124,7 @@ function clearLines() {
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
   }
+  if (typeof Records !== 'undefined') Records.onLock(cleared);
 }
 
 function ghostY() {
@@ -238,6 +239,7 @@ function endGame() {
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
   overlay.classList.remove('hidden');
+  if (typeof Records !== 'undefined') Records.onGameOver(score, lines);
 }
 
 function togglePause() {
@@ -285,11 +287,13 @@ function init() {
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  if (typeof Records !== 'undefined') Records.onStart();
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
+  if (e.target instanceof HTMLInputElement) return; // escribiendo el nombre
   if (e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
@@ -326,4 +330,11 @@ themeToggle.addEventListener('click', () => {
 
 applyTheme(loadTheme());
 
-init();
+// Estado inicial en reposo: tablero vacio dibujado; el juego arranca con init() desde la pantalla de inicio.
+board = createBoard();
+score = 0; lines = 0; level = 1; paused = false;
+gameOver = true; // ignora teclas hasta pulsar Jugar
+next = randomPiece();
+spawn();
+updateHUD();
+draw();
