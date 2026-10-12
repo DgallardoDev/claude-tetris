@@ -1,0 +1,30 @@
+/* ---- Selector de skin (esquina superior derecha, junto al toggle de tema) ---- */
+.top-controls {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* el toggle de tema pasa a flujo normal dentro del contenedor */
+.top-controls #theme-toggle {
+  position: static;
+}
+
+#skin-select {
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#skin-select:hover,
+#skin-select:focus-visible {
+  border-color: var(--accent);
+}
