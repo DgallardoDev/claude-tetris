@@ -38,8 +38,13 @@ jobs:
 
             ## 1. Labels
             - Lista los labels existentes con `gh label list --limit 100`.
-            - Elige solo labels que ya existan y apliquen (p. ej. tipo: bug / enhancement / documentation / question;
-              y área si existe). Si falta un tipo imprescindible, créalo con `gh label create`.
+            - Determina los labels que correspondan al issue: tipo, severidad y área. Reutiliza los que
+              ya existan y CREA los que falten con
+              `gh label create "<nombre>" --color <hex> --description "<descripción en español>"`.
+              Convención:
+              - Tipo: `bug` (d73a4a), `enhancement` (a2eeef), `documentation` (0075ca), `question` (d876e3).
+              - Severidad: `severity: baja` (0e8a16), `severity: media` (fbca04), `severity: alta` (b60205).
+              - Área (según el código afectado): `area: gameplay`, `area: ui`, `area: scoring`, `area: input` (color 5319e7).
             - Aplícalos con `gh issue edit ${{ github.event.issue.number }} --add-label "a,b"`.
             - Si el issue fue editado, quita con `--remove-label` los labels que puso el triage
               anteriormente y que ya no aplican. No toques labels puestos manualmente por personas
@@ -47,16 +52,32 @@ jobs:
 
             ## 2. Diagnóstico
             Revisa el código relevante (`game.js`, `index.html`, etc.) para fundamentar el análisis.
-            Escribe el diagnóstico EN ESPAÑOL con este formato exacto, empezando con el marcador HTML:
+            Escribe el diagnóstico EN ESPAÑOL con este formato exacto, empezando con el marcador HTML.
+            El comentario DEBE estar en Markdown compatible con GitHub (GFM): encabezados `##`,
+            listas con `-` o numeradas, negritas con `**`, bloques de código con triple backtick y
+            lenguaje (```js), referencias `archivo:línea` entre backticks, y una línea en blanco
+            entre secciones y párrafos para que GitHub los renderice por separado. No uses HTML
+            salvo el marcador inicial.
 
             <!-- claude-triage -->
             ## 🤖 Diagnóstico automático
+
             **Resumen:** una o dos frases.
+
             **Tipo / Severidad:** bug | mejora | pregunta | docs — baja | media | alta.
+
             **Causa probable:** explicación técnica con referencias `archivo:línea` cuando sea un bug.
-            **Archivos/funciones involucrados:** lista.
-            **Propuesta de solución:** pasos concretos para implementarla.
+
+            **Archivos/funciones involucrados:**
+
+            - `archivo` — `función`
+
+            **Propuesta de solución:**
+
+            1. Paso concreto (usa bloques de código si ayudan).
+
             **Información faltante:** preguntas al autor si el issue es ambiguo (omite si no hay).
+
             **Riesgos / casos borde:** breve.
 
             ## 3. Publicar
@@ -64,6 +85,8 @@ jobs:
               (`gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments`).
             - Si existe, actualízalo (`gh api -X PATCH repos/${{ github.repository }}/issues/comments/<id> -f body=...`).
               Si no, crea uno nuevo con `gh issue comment`.
+            - Pasa el cuerpo con saltos de línea reales (entre comillas, multilínea), no con `\n`
+              literales, para que el Markdown se renderice bien en GitHub.
             - No modifiques el título, cuerpo ni estado del issue, ni el código del repo.
           claude_args: >-
             --allowedTools "Read,Grep,Glob,Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh label list:*),Bash(gh label create:*),Bash(gh api:*)"
