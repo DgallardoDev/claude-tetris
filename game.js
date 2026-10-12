@@ -54,6 +54,20 @@ function loadTheme() {
   catch { return 'dark'; }
 }
 
+function loadStartLevel() {
+  try {
+    const n = parseInt(localStorage.getItem('startLevel'), 10);
+    return n >= 1 && n <= 10 ? n : 1;
+  } catch { return 1; }
+}
+
+let startLevel = loadStartLevel(); // nivel inicial para la PRÓXIMA partida (menú de pausa, pause.js)
+let gameStartLevel = startLevel;   // nivel inicial de la partida en curso (piso del nivel)
+
+function speedForLevel(lvl) {
+  return Math.max(100, 1000 - (lvl - 1) * 90);
+}
+
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 
 function createBoard() {
@@ -120,8 +134,8 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    level = Math.max(gameStartLevel, Math.floor(lines / 10) + 1);
+    dropInterval = speedForLevel(level);
     updateHUD();
   }
 }
@@ -248,10 +262,8 @@ function togglePause() {
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
   }
+  if (window.pauseUI) (paused ? pauseUI.show : pauseUI.hide)();
 }
 
 function loop(ts) {
@@ -275,22 +287,27 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  gameStartLevel = startLevel;
+  level = gameStartLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = speedForLevel(level);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  if (window.pauseUI) pauseUI.hide();
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    if (!e.repeat && !(e.target instanceof HTMLSelectElement)) togglePause();
+    return;
+  }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
